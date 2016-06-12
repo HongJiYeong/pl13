@@ -490,6 +490,15 @@ class CuteInterpreter(object):
     def run_lambda(self, func_node):                                      ######
         rhs1 = func_node.next
         if rhs1 is None :
+            if func_node.value.next.next.next is not None :
+                loop = func_node.value.next.next
+                while (loop.next) :
+                    self.run_expr(loop)
+                    loop=loop.next
+                newlambda = Node(TokenType.LAMBDA)
+                newlambda.next=func_node.value.next
+                newlambda.next.next=loop
+                return self.run_lambda(Node(TokenType.LIST,newlambda))
             return func_node
         else :
             lambda_func = func_node.value
