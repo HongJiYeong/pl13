@@ -487,6 +487,17 @@ class CuteInterpreter(object):
         result = self.run_expr(rhs1.value.next)
         return Node(result.type, result)
 
+    def run_lambda(self, func_node):                                      ######
+        rhs1 = func_node.next
+        if rhs1 is None :
+            return func_node
+        else :
+            lambda_func = func_node.value
+            param = lambda_func.next
+            rhs1 = self.run_expr(rhs1)
+            self.insertTable(param.value, rhs1)
+            return self.run_expr(lambda_func.next.next)
+
     def run_expr(self, root_node):
         """
         :type root_node: Node
@@ -495,7 +506,11 @@ class CuteInterpreter(object):
             return None
 
         if root_node.type is TokenType.ID:
-            return self.lookupTable(root_node)
+	    temp = self.lookupTable(root_node)
+	    if temp.type is TokenType.LIST:
+		if temp.value.type is TokenType.LAMBDA :
+			temp.next = self.run_expr(root_node.next)
+            return self.run_expr(temp)
         elif root_node.type is TokenType.INT:
             return root_node
         elif root_node.type is TokenType.TRUE:
@@ -503,7 +518,7 @@ class CuteInterpreter(object):
         elif root_node.type is TokenType.FALSE:
             return root_node
         elif root_node.type is TokenType.LIST:
-            return self.run_list(root_node)
+	    return self.run_list(root_node)
         else:
             print "Run Expr Error"
         return None
@@ -524,6 +539,11 @@ class CuteInterpreter(object):
             return self.run_cond(op_code)
         if op_code.type is TokenType.QUOTE:
             return l_node
+	if op_code.type is TokenType.LAMBDA : return self.run_lambda(l_node)
+        if op_code.type is TokenType.LIST:
+            if op_code.value.type is TokenType.LAMBDA:
+                return self.run_lambda(op_code)  
+        if op_code.type is TokenType.ID: return self.run_expr(op_code)
         else:
             print "application: not a procedure;"
             print "expected a procedure that can be applied to arguments"
