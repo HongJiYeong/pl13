@@ -467,7 +467,7 @@ class CuteInterpreter(object):
     def lookupTable(self, id) :
         var = id.value
         if var in table :
-            return self.run_expr(table[var])
+            return table[var]
         else :
             return id
 
